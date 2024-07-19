@@ -134,11 +134,11 @@ async def main(message):
     chain = cl.user_session.get("chain")
     cb = cl.AsyncLangchainCallbackHandler()
     cb.answer_reached = True
-    # res=await chain.acall(message, callbacks=[cb])
+    
     res = await chain.acall(message.content, callbacks=[cb])
-    # print(f"response: {res}")
+    
     answer = res['result']
-    #answer = answer.replace(".", ".\n")
+   
     source_documents = res["source_documents"]
 
     text_elements = []  # type: List[cl.Text]
@@ -154,7 +154,7 @@ async def main(message):
         for source_ind,[source_doc,score] in enumerate(metadocs):
             relevance_score = score
 
-            source_name = f"{source_ind+1}) {source_doc.metadata.get('source', 'N/A') }                 Relevance: {relevance_score}"
+            source_name = f"{source_ind+1}) {source_doc.metadata.get('source', 'N/A') }  Relevance: {relevance_score}"
             # source_names.append(f"{source_name}  (Relevance: {relevance_score})")
             # Create the text element referenced in the message
             text_elements.append(

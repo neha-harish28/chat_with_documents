@@ -104,14 +104,15 @@ import whisper
 
 warnings.simplefilter("ignore")
 
-video_directory = "video/"
-data_directory = None
-video_url = None
+# video_directory = "video/"
+# data_directory = None
+# video_url = None
 
 ABS_PATH: str = os.path.dirname(os.path.abspath(__file__))
-DB_DIR: str = os.path.join(ABS_PATH, "audiodata")
+DB_DIR: str = os.path.join(ABS_PATH, "db")
 VD_DIR: str = os.path.join(ABS_PATH, "video")
-
+DATA_DR: str = os.path.join(ABS_PATH, "data")
+VID_URL: str = None
 
 
 class Document:
@@ -120,7 +121,7 @@ class Document:
         self.metadata = metadata if metadata is not None else {}
 
 # Create vector database
-def create_vector_database(data_directory: str = None, video_url: str = None, video_directory: str = None):
+def create_vector_database():
     """
     Creates a vector database using document loaders and embeddings.
 
@@ -135,8 +136,8 @@ def create_vector_database(data_directory: str = None, video_url: str = None, vi
     model = whisper.load_model("base")
 
     # Initialize loaders for different file types
-    if data_directory is not None:
-        pdf_loader = DirectoryLoader(data_directory, glob="**/*.pdf", loader_cls=PyPDFLoader)
+    if DATA_DR is not None:
+        pdf_loader = DirectoryLoader(DATA_DR, glob="**/*.pdf", loader_cls=PyPDFLoader)
         loaded_documents += pdf_loader.load()
 
     # Loading and transcribing video if URL is provided
@@ -151,8 +152,8 @@ def create_vector_database(data_directory: str = None, video_url: str = None, vi
     #     text = result["text"]
     #     loaded_documents.append({"text": text})
 
-    if video_directory is not None:
-        for filename in os.listdir(video_directory):
+    if VD_DIR is not None:
+        for filename in os.listdir(VD_DIR):
             if filename.endswith(".mp4") or filename.endswith(".mkv") or filename.endswith(".avi"):
                 video_path = os.path.join(VD_DIR, filename)
                 result = model.transcribe(video_path)
@@ -163,9 +164,9 @@ def create_vector_database(data_directory: str = None, video_url: str = None, vi
     # print(loaded_documents)
 
 
-    if video_url is not None:
+    if VID_URL is not None:
         loader = YoutubeLoader.from_youtube_url(
-        video_url, add_video_info=True
+        VID_URL, add_video_info=True
         )
         loaded_documents += loader.load()
 
@@ -198,60 +199,7 @@ def create_vector_database(data_directory: str = None, video_url: str = None, vi
 
 
 if __name__ == "__main__":
-    create_vector_database(data_directory, video_url, video_directory)
+    create_vector_database()
 
 
 
-
-# @cl.on_form
-# async def on_form(form):
-#     data_directory = form["data_directory"]
-#     video_url = form["video_url"]
-    
-#     if not os.path.exists(data_directory):
-#         await cl.send_message("The provided directory does not exist.")
-#         return
-    
-#     await cl.send_message("Ingesting data, please wait...")
-#     create_vector_database(data_directory, video_url)
-#     await cl.send_message("Data ingested successfully.")
-
-
-
-# @cl.on_chat_start
-# async def start():
-#     settings = await cl.ChatSettings(
-#         [
-#             TextInput(id="dataDirectory", label="Data Directory", placeholder="Type Directory"),
-#             TextInput(id="url", label="youtube url", placeholder="Enter Url"),      
-#         ]
-#     ).send()
-
-#     data = settings["dataDirectory"]
-#     url = settings["url"]
-
-#     if not os.path.exists(data):
-#         await cl.send_message("The provided directory does not exist.")
-#         return
-
-#     await cl.send_message("Ingesting data, please wait...")
-#     create_vector_database(data, url)
-#     await cl.send_message("Data ingested successfully.")
-
-
-
-# @cl.on_message
-# async def on_message(message: cl.Message):
-#     if message.text.lower() == "ingest":
-#         await cl.send_message("Please fill out the form to ingest data.")
-
-#         data_directory = await cl.TextInput(name="data_directory", label="Data Directory", placeholder="Select data directory"),
-#         video_url = await cl.TextInput(name="video_url", label="YouTube Video URL (optional)", placeholder="Enter YouTube video URL")
-        
-#         await cl.send_message("Ingesting data, please wait...")
-#         create_vector_database(data_directory, video_url)
-#         await cl.send_message("Data ingested successfully.")
-
-
-# if __name__ == "__main__":
-#     cl.launch()
