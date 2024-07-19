@@ -1,0 +1,9 @@
+.venv
+db
+data
+.files
+.chainlit
+__pycache__
+video
+audiodata
+audio
