@@ -109,7 +109,7 @@ warnings.simplefilter("ignore")
 # video_url = None
 
 ABS_PATH: str = os.path.dirname(os.path.abspath(__file__))
-DB_DIR: str = os.path.join(ABS_PATH, "db")
+DB_DIR: str = os.path.join(ABS_PATH, "newDB")
 VD_DIR: str = os.path.join(ABS_PATH, "video")
 DATA_DR: str = os.path.join(ABS_PATH, "data")
 VID_URL: str = None

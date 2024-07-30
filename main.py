@@ -12,7 +12,7 @@ from langchain.chains import RetrievalQA
 from langchain.memory import ChatMessageHistory, ConversationBufferMemory
 
 ABS_PATH: str = os.path.dirname(os.path.abspath(__file__))
-DB_DIR: str = os.path.join(ABS_PATH, "audiodata")
+DB_DIR: str = os.path.join(ABS_PATH, "newDB")
 
 
 # Set up RetrievelQA model
@@ -153,13 +153,23 @@ async def main(message):
         source_names = []
         for source_ind,[source_doc,score] in enumerate(metadocs):
             relevance_score = score
+            source = source_doc.metadata.get('source')
+            file_name = os.path.basename(source)
+            source_name = f"{source_ind+1}) {file_name}  [Relevance: {relevance_score}]"
 
-            source_name = f"{source_ind+1}) {source_doc.metadata.get('source', 'N/A') }  Relevance: {relevance_score}"
+            if(".pdf" in source):
+
+                answer += f"\nRelevant File: {file_name}"
+
+                text_elements.append(
+                cl.Pdf(path=source, name=file_name,display="side"),
+            )
+            # print(source)
             # source_names.append(f"{source_name}  (Relevance: {relevance_score})")
             # Create the text element referenced in the message
             text_elements.append(
-                cl.Text(content=source_doc.page_content, name=source_name)
-            )
+                cl.Text(content=source_doc.page_content, name=source_name),
+            )          
         
         # source_names = [text_el.name for text_el in text_elements]
             
