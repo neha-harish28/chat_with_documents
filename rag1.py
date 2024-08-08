@@ -157,20 +157,8 @@ import pptx
 
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=400, chunk_overlap=100)
 
-@cl.on_chat_start
-async def on_chat_start():
+async def process_uploaded_files(uploaded_files):
     all_file_texts = []  # Initialize a list to hold text from all files
-
-    # Wait for the user to upload multiple files
-    uploaded_files = await cl.AskFileMessage(
-        content="Please upload pdf, docx, txt, or pptx files! You can select multiple files.",
-        accept=["application/pdf", 
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
-                "text/plain", 
-                "application/vnd.openxmlformats-officedocument.presentationml.presentation"],
-        max_size_mb=20,
-        max_files=10  # Allow multiple file uploads
-    ).send()
 
     for uploaded_file in uploaded_files:
         print(f"Uploaded file: {uploaded_file.name}")
@@ -253,18 +241,9 @@ async def on_chat_start():
         return_source_documents=True,
     )
 
-    # Let the user know that the system is ready
-    print(f"Processing done. You can now ask questions!")
-    msg.content = "Processing done. You can now ask questions!"
-    await msg.update()
+    return chain
 
-    cl.user_session.set("chain", chain)
-
-    
-@cl.on_message
-async def main(message: cl.Message):
-    chain = cl.user_session.get("chain")  # type: ConversationalRetrievalChain
-
+async def answer_question(message: cl.Message, chain):
     cb = cl.AsyncLangchainCallbackHandler()
     res = await chain.ainvoke(message.content, callbacks=[cb])
     answer = res["answer"]
