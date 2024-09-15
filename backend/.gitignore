@@ -1,0 +1,5 @@
+.chainlit
+.files
+.venv
+newEmb
+__pycache__
