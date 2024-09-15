@@ -12,6 +12,7 @@ from ingest import create_vector_database
 app = FastAPI()
 
 ABS_PATH: str = os.path.dirname(os.path.abspath(__file__))
+FILE_PATH: str = os.path.join(ABS_PATH, "files")
 
 
 app.add_middleware(
@@ -28,12 +29,12 @@ app.add_middleware(
 
 @app.get("/fileNames")
 async def Files():
-    return {"files": os.listdir(ABS_PATH)}
+    return {"files": os.listdir(FILE_PATH)}
 
 
 @app.post("/upload")
 async def upload(files: list[UploadFile]):
-    with open(ABS_PATH, "w") as f:
+    with open(FILE_PATH, "w") as f:
         for file in files:
             f.write(file)
             create_vector_database(file)

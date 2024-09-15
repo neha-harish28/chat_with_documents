@@ -157,7 +157,7 @@ function App() {
       <div key={message.id} className="flex items-start space-x-2">
         <div className="w-20 text-sm text-green-500">{message.name}</div>
         <div className="flex-1 border rounded-lg p-2">
-          <p className="text-black dark:text-white">{message.output}</p>
+          <p className="text-[#ececec]">{message.output}</p>
           <small className="text-xs text-gray-500">{date}</small>
         </div>
       </div>
@@ -166,9 +166,9 @@ function App() {
 
   return (
     <>
-      <div className="Parent">
-        <div className="">
-          <div className="">
+      <div className="flex bg-[#171717] h-screen">
+        <div className="shadow-md z-10">
+
 
             <h1 className="sideBarHeader">Stored Files</h1>
             <Accordion type="single" collapsible>
@@ -252,45 +252,47 @@ function App() {
               </AccordionItem>
             </Accordion>
 
-            <div className="box-border p-4">
+            <div className="mt-8 flex flex-col box-border p-4 items-center">
 
-            <Input type="file" multiple className="w-full text-foreground" ref={inputRef}/> 
-                    
-            </div>
-   
-            <Button className="mt-4" onClick={() => {
+            <Input type="file" multiple className="w-full text-foreground bg-[#ececec]" ref={inputRef}/> 
+            
+            <Button className="mt-4 w-24 bg-[#ececec] text-[#2f2f2f] hover:bg-[#c1c1c1]" onClick={() => {
                 handleInputFiles(inputRef.current.files);
             }}> 
-            
+            Upload
             </Button>
+            </div>
+   
+           
 
-          </div>
+      
         </div>
 
 
-        <div className="min-h-screen bg-gray-500 dark:bg-gray-900 flex flex-col">
+        <div className="min-h-screen bg-[#212121] text-[#ececec] flex flex-col grow">
           <div className="flex-1 overflow-auto p-6">
-            <div className="space-y-4">
+            <div className="flex justify-center space-y-4">
               {messages.map((message) => renderMessage(message))}
             </div>
           </div>
 
-          <div className="border-t p-4 bg-black dark:bg-gray-800">
-            <div className="flex items-center space-x-2">
+          <div className="p-4 flex justify-center bg-[#212121] text-[#ececec]">
+            <div className="flex items-center space-x-2 rounded-lg">
               <Input
                 autoFocus
-                className="flex-1"
+                className="bg-[#2f2f2f] w-[32rem] text-[#ececec] focus-visible:ring-offset-0 focus-visible:ring-transparent"
                 id="message-input"
                 placeholder="Type a message"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
+
                 onKeyUp={(e) => {
                   if (e.key === "Enter") {
                     handleSendMessage();
                   }
                 }}
               />
-              <Button onClick={handleSendMessage} type="submit">
+              <Button onClick={handleSendMessage} type="submit" className="bg-[#ececec] text-[#2f2f2f] rounded-full hover:bg-[#c1c1c1]">
                 Send
               </Button>
             </div>
@@ -298,13 +300,13 @@ function App() {
         </div>
 
 
-
+          
 
 
       </div>
 
 
-
+      {/* Have to add a loading spinner for the file upload */}
 
 
     </>

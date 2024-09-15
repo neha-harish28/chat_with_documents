@@ -109,6 +109,7 @@ warnings.simplefilter("ignore")
 # video_url = None
 
 ABS_PATH: str = os.path.dirname(os.path.abspath(__file__))  # Absolute path of directory where files will be accessed and stored
+FILE_PATH: str = os.path.join(ABS_PATH, "files")
 DB_DIR: str = os.path.join(ABS_PATH, "newEmb")
 # VD_DIR: str = os.path.join(ABS_PATH, "video")
 # DATA_DR: str = os.path.join(ABS_PATH, "data")
@@ -158,7 +159,7 @@ def create_vector_database(uploaded_file):
 
     if file_ext == 'pdf':
         print("Reading PDF file...")
-        pdf_path = os.path.join(ABS_PATH, uploaded_file.name)
+        pdf_path = os.path.join(FILE_PATH, uploaded_file.name)
         loader = PyPDFLoader(pdf_path)
         loaded_documents += loader.load()
 
@@ -166,7 +167,7 @@ def create_vector_database(uploaded_file):
 
     if file_ext == "mp4" or file_ext == "mkv" or file_ext == "avi":
         print("Reading Video file...")
-        video_path = os.path.join(ABS_PATH, uploaded_file.name)
+        video_path = os.path.join(FILE_PATH, uploaded_file.name)
         result = model.transcribe(video_path)
         text = result["text"]
         loaded_documents.append(Document(page_content=text, metadata={"source": video_path,"score": 0.0}))
