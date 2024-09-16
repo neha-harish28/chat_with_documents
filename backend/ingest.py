@@ -154,12 +154,12 @@ def create_vector_database(uploaded_file):
     #     loaded_documents.append({"text": text})
 
 
-    file_ext = uploaded_file.name.split('.')[-1].lower()
+    file_ext = uploaded_file.split('.')[-1].lower()
 
 
     if file_ext == 'pdf':
         print("Reading PDF file...")
-        pdf_path = os.path.join(FILE_PATH, uploaded_file.name)
+        pdf_path = os.path.join(FILE_PATH, uploaded_file)
         loader = PyPDFLoader(pdf_path)
         loaded_documents += loader.load()
 
@@ -167,7 +167,7 @@ def create_vector_database(uploaded_file):
 
     if file_ext == "mp4" or file_ext == "mkv" or file_ext == "avi":
         print("Reading Video file...")
-        video_path = os.path.join(FILE_PATH, uploaded_file.name)
+        video_path = os.path.join(FILE_PATH, uploaded_file)
         result = model.transcribe(video_path)
         text = result["text"]
         loaded_documents.append(Document(page_content=text, metadata={"source": video_path,"score": 0.0}))
@@ -215,9 +215,8 @@ def create_vector_database(uploaded_file):
 
     vector_database.persist()
 
-    
 
-    return vector_database
+    print("\nFile Embedded to Database!")
 
 
 

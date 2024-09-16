@@ -33,18 +33,26 @@ async def Files():
 
 
 @app.post("/upload")
-async def upload(files: list[UploadFile]):
-    with open(FILE_PATH, "w") as f:
-        for file in files:
-            f.write(file)
-            create_vector_database(file)
+async def upload(files: list[UploadFile] = File(...)):
+    print("hello")
 
-            
+    # try:
+        
+    for fl in files:
+        content = await fl.read()
+        with open(f"{FILE_PATH}/{fl.filename}", "wb") as f:
+            f.write(content)
+        
+        create_vector_database(fl.filename)
+
+
+    # finally:
+    #     f.close()
+
             
             
     
     return {"status": "uploaded"}
-
 
 
 

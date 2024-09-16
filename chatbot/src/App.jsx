@@ -63,7 +63,7 @@ function App() {
         let files = await response.json();
         files = files.files;
 
-        console.log(files);
+        // console.log(files);
 
 
 
@@ -110,9 +110,19 @@ function App() {
 
   const handleInputFiles = async (files) => {
 
+      // console.log(files);
+      let formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append('files', files[i]);
+      }
+
+      // for (var key of formData.entries()) {
+      //   console.log(key[0] + ', ' + key[1])
+      // }
+
       const response = await fetch("http://localhost:80/upload", {
         method: "POST",
-        body: files,
+        body: formData,
 
       }
       )
@@ -130,6 +140,8 @@ function App() {
 
   const handleSendMessage = () => {
     const content = inputValue.trim();
+    if (content.length === 0) return;
+
     if (content) {
       const message = {
         name: "user",
@@ -142,6 +154,7 @@ function App() {
   };
 
   const renderMessage = (message) => {
+    if (!message.output || message.output.trim() === "") return null;
     const DateTimeFormatOptions = {
       hour: "2-digit",
       minute: "2-digit",
@@ -158,6 +171,8 @@ function App() {
         <div className="w-20 text-sm text-green-500">{message.name}</div>
         <div className="flex-1 border rounded-lg p-2">
           <p className="text-[#ececec]">{message.output}</p>
+          {/* <p className="text-[#ececec]">{elements}</p> */}
+
           <small className="text-xs text-gray-500">{date}</small>
         </div>
       </div>
@@ -216,7 +231,12 @@ function App() {
                   <ScrollArea className="max-h-56">
                     {
                       (videos === undefined) ? (
-                        <Skeleton />
+                        <div className="h-full flex flex-col justify-center space-y-2 px-4">
+                          <Skeleton className="h-5 w-full" />
+                          <Skeleton className="h-5 w-full" />
+                          <Skeleton className="h-5 w-full" />
+
+                        </div>
                       ) : (
                         videos.length === 0 ? <div className="h-full flex flex-col justify-center space-y-2 px-4">No video file found</div> :
                           videos.map((video, index) => {
@@ -237,7 +257,12 @@ function App() {
                   <ScrollArea className="max-h-56">
                     {
                       (audios === undefined) ? (
-                        <Skeleton />
+                        <div className="h-full flex flex-col justify-center space-y-2 px-4">
+                          <Skeleton className="h-5 w-full" />
+                          <Skeleton className="h-5 w-full" />
+                          <Skeleton className="h-5 w-full" />
+
+                        </div>
                       ) : (
                         audios.length === 0 ? <div className="h-full flex flex-col justify-center space-y-2 px-4">No audio file found</div> :
                           audios.map((aud, index) => {
@@ -271,7 +296,7 @@ function App() {
 
         <div className="min-h-screen bg-[#212121] text-[#ececec] flex flex-col grow">
           <div className="flex-1 overflow-auto p-6">
-            <div className="flex justify-center space-y-4">
+            <div className="flex flex-col justify-center space-y-4">
               {messages.map((message) => renderMessage(message))}
             </div>
           </div>
