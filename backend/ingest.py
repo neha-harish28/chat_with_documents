@@ -89,6 +89,7 @@ import os
 import warnings
 import chainlit as cl
 from chainlit.input_widget import TextInput
+from dotenv import load_dotenv
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import (
@@ -96,7 +97,7 @@ from langchain_community.document_loaders import (
     PyPDFLoader,
     YoutubeLoader
 )
-from langchain_community.embeddings import OllamaEmbeddings
+from langchain_community.embeddings import OllamaEmbeddings,HuggingFaceBgeEmbeddings
 from langchain_community.vectorstores import Chroma
 
 import pytube as pt
@@ -132,6 +133,9 @@ def create_vector_database(uploaded_file):
     
     If a video URL is provided, it downloads and transcribes the video as well.
     """
+
+    load_dotenv()
+
     loaded_documents = []
 
     model = whisper.load_model("base")
@@ -203,12 +207,21 @@ def create_vector_database(uploaded_file):
     print(chunked_documents)
 
     # Initialize Ollama Embeddings
-    ollama_embeddings = OllamaEmbeddings(model="mistral")
+    # ollama_embeddings = OllamaEmbeddings(model="mistral")
+
+
+    # Hugging Face Bge Embeddings
+    model_name = "BAAI/bge-m3"
+    model_kwargs = {"device": "cuda"}
+    encode_kwargs = {"normalize_embeddings": True}
+    hf_embeddings = HuggingFaceBgeEmbeddings(
+        model_name=model_name, model_kwargs=model_kwargs, encode_kwargs=encode_kwargs
+    )
 
     # Create and persist a Chroma vector database from the chunked documents
     vector_database = Chroma.from_documents(
         documents=chunked_documents,
-        embedding=ollama_embeddings,
+        embedding=hf_embeddings,
         persist_directory=DB_DIR,
         collection_metadata={"hnsw:space": "cosine"}
     )

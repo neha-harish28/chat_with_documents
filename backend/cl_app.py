@@ -2,14 +2,20 @@
 # https://docs.chainlit.io/integrations/langchain
 import os
 from langchain import hub
+from dotenv import load_dotenv
+
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.vectorstores import Chroma
-from langchain_community.llms import Ollama
+from langchain_community.llms import Ollama,huggingface_hub
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 import chainlit as cl
 from langchain.chains import RetrievalQA
 from langchain.memory import ChatMessageHistory, ConversationBufferMemory
+from langchain_community.embeddings import HuggingFaceBgeEmbeddings
+
+
+
 
 ABS_PATH: str = os.path.dirname(os.path.abspath(__file__))
 DB_DIR: str = os.path.join(ABS_PATH, "newEmb")
@@ -59,12 +65,24 @@ class MyVectorStoreRetriever(VectorStoreRetriever):
 
 
 def load_model():
-    llm = Ollama(
-        model="mistral",
-        verbose=True,
-        callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
-        temperature=0.7,
+
+    # Local Mistral Model
+    # llm = Ollama(
+    #     model="mistral",
+    #     verbose=True,
+    #     callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]),
+    #     temperature=0.7,
+    # )
+
+    # Accessing Mistral Model from Hugging Face Hub
+    
+    llm = huggingface_hub(
+        repo_id="mistralai/Mistral-7B-Instruct-v0.3",
+        model_kwargs={'temperature': 0.7},
     )
+
+
+
     return llm
 
 
@@ -96,9 +114,23 @@ def retrieval_qa_chain(llm, vectorstore):
 def qa_bot():
     llm = load_model()
     DB_PATH = DB_DIR
-    vectorstore = Chroma(
-        persist_directory=DB_PATH, embedding_function=OllamaEmbeddings(model="mistral")
+
+    model_name = "BAAI/bge-m3"
+    model_kwargs = {"device": "cuda"}
+    encode_kwargs = {"normalize_embeddings": True}
+    hf_embeddings = HuggingFaceBgeEmbeddings(
+        model_name=model_name, model_kwargs=model_kwargs, encode_kwargs=encode_kwargs
     )
+
+    # Using Bge Embeddings
+    vectorstore = Chroma(
+        persist_directory=DB_PATH, embedding_function=hf_embeddings
+    )
+
+    # Using Ollama Embeddings
+    # vectorstore = Chroma(
+    #     persist_directory=DB_PATH, embedding_function=OllamaEmbeddings(model="mistral")
+    # )
 
     qa = retrieval_qa_chain(llm, vectorstore)
     return qa
@@ -113,6 +145,8 @@ async def start():
     sends a welcome message, and stores the bot instance in the user's session.
     """
     print("hello")
+
+    load_dotenv()
 
     chain = qa_bot()
     welcome_message = cl.Message(content="Starting the bot...")
@@ -149,9 +183,24 @@ async def main(message):
 
     text_elements = []  # type: List[cl.Text]
 
-    vectorstore = Chroma(
-        persist_directory=DB_DIR, embedding_function=OllamaEmbeddings(model="mistral")
+    # Using Hugging Face Bge Embeddings
+    model_name = "BAAI/bge-m3"
+    model_kwargs = {"device": "cuda"}
+    encode_kwargs = {"normalize_embeddings": True}
+    hf_embeddings = HuggingFaceBgeEmbeddings(
+        model_name=model_name, model_kwargs=model_kwargs, encode_kwargs=encode_kwargs
     )
+
+
+    vectorstore = Chroma(
+        persist_directory=DB_DIR, embedding_function=hf_embeddings
+    )
+
+
+    # Using Ollama Embeddings
+    # vectorstore = Chroma(
+    #     persist_directory=DB_DIR, embedding_function=OllamaEmbeddings(model="mistral")
+    # )
     
     metadocs = vectorstore.similarity_search_with_relevance_scores(message.content)
     
