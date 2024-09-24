@@ -3,19 +3,19 @@
 import os
 from langchain import hub
 from dotenv import load_dotenv
-
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.vectorstores import Chroma
-from langchain_community.llms import Ollama,huggingface_hub
+from langchain_community.llms import Ollama
+# from langchain_community.llms import huggingface_endpoint
+
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 import chainlit as cl
 from langchain.chains import RetrievalQA
 from langchain.memory import ChatMessageHistory, ConversationBufferMemory
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
-
-
-
+import huggingface_hub
+from langchain_community.llms import HuggingFaceEndpoint
 
 ABS_PATH: str = os.path.dirname(os.path.abspath(__file__))
 DB_DIR: str = os.path.join(ABS_PATH, "newEmb")
@@ -33,8 +33,7 @@ from langchain.callbacks.manager import CallbackManagerForRetrieverRun
 from langchain.schema.document import Document
 from typing import List
 from langchain_core.runnables import chain
-
-
+from langchain.llms import HuggingFacePipeline
 # @chain
 # def retriever(query: str) -> List[Document]:
 #     docs, scores = zip(*vectorstore.similarity_search_with_score(query))
@@ -76,12 +75,28 @@ def load_model():
 
     # Accessing Mistral Model from Hugging Face Hub
     
-    llm = huggingface_hub(
-        repo_id="mistralai/Mistral-7B-Instruct-v0.3",
-        model_kwargs={'temperature': 0.7},
+    model_id = "mistralai/Mistral-7B-Instruct-v0.3"  # Replace with the correct model ID
+    
+
+
+
+    # pipe = pipeline(
+    #     task="text-generation",   # Define the task
+    #     model=model_id,                # Remote model instance
+    #     tokenizer=model_id,            # Remote tokenizer instance
+    #     # use_auth_token=HUGGINGFACEHUB_API_TOKEN,  
+    #     max_length=512,           # Adjust generation parameters
+    #     temperature=0.7,
+    #     top_p=0.95,
+    #     repetition_penalty=1.1,
+    # )
+
+    llm = HuggingFaceEndpoint(
+        repo_id = model_id,
+        temperature=0.5,
     )
 
-
+    # llm = HuggingFacePipeline(pipeline=pipe)
 
     return llm
 
@@ -116,7 +131,8 @@ def qa_bot():
     DB_PATH = DB_DIR
 
     model_name = "BAAI/bge-m3"
-    model_kwargs = {"device": "cuda"}
+    # hf_embeddings = HuggingFaceEndpoint(repo_id=model_name)
+    model_kwargs = {"device": "cpu"}
     encode_kwargs = {"normalize_embeddings": True}
     hf_embeddings = HuggingFaceBgeEmbeddings(
         model_name=model_name, model_kwargs=model_kwargs, encode_kwargs=encode_kwargs
@@ -152,7 +168,7 @@ async def start():
     welcome_message = cl.Message(content="Starting the bot...")
     await welcome_message.send()
     welcome_message.content = (
-        "Hi, Welcome to Chat With Documents using Ollama (mistral model) and LangChain."
+        "Hi, Welcome to Chat With Documents using mistral-7b model and LangChain."
     )
     await welcome_message.update()
     cl.user_session.set("chain", chain)
@@ -185,7 +201,8 @@ async def main(message):
 
     # Using Hugging Face Bge Embeddings
     model_name = "BAAI/bge-m3"
-    model_kwargs = {"device": "cuda"}
+    # hf_embeddings = HuggingFaceEndpoint(endpoint_url=model_name)
+    model_kwargs = {"device": "cpu"}
     encode_kwargs = {"normalize_embeddings": True}
     hf_embeddings = HuggingFaceBgeEmbeddings(
         model_name=model_name, model_kwargs=model_kwargs, encode_kwargs=encode_kwargs

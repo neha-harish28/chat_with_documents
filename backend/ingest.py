@@ -212,7 +212,7 @@ def create_vector_database(uploaded_file):
 
     # Hugging Face Bge Embeddings
     model_name = "BAAI/bge-m3"
-    model_kwargs = {"device": "cuda"}
+    model_kwargs = {"device": "cpu"}
     encode_kwargs = {"normalize_embeddings": True}
     hf_embeddings = HuggingFaceBgeEmbeddings(
         model_name=model_name, model_kwargs=model_kwargs, encode_kwargs=encode_kwargs
