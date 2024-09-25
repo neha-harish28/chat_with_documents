@@ -27,7 +27,7 @@ warnings.simplefilter("ignore")
 # data_directory = None
 # video_url = None
 
-ABS_PATH: str = os.path.dirname(os.path.abspath(__file__))  # Absolute path of directory where files will be accessed and stored
+ABS_PATH: str = os.path.dirname(os.path.abspath(__file__)) 
 FILE_PATH: str = os.path.join(ABS_PATH, "files")
 DB_DIR: str = os.path.join(ABS_PATH, "newEmb")
 # VD_DIR: str = os.path.join(ABS_PATH, "video")
