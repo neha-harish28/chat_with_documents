@@ -1,12 +1,8 @@
-# import required dependencies
-# https://docs.chainlit.io/integrations/langchain
 import os
 from langchain import hub
 from dotenv import load_dotenv
 from langchain_community.embeddings import OllamaEmbeddings
-#from langchain_community.vectorstores import Chroma
-from langchain_community.vectorstores import FAISS
-from langchain_community.docstore.in_memory import InMemoryDocstore
+from langchain_community.vectorstores import Chroma
 from langchain_community.llms import Ollama
 # from langchain_community.llms import huggingface_endpoint
 
@@ -18,12 +14,10 @@ from langchain.memory import ChatMessageHistory, ConversationBufferMemory
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings
 import huggingface_hub
 from langchain_community.llms import HuggingFaceEndpoint
-import faiss
-huggingface_api_key = os.getenv("HUGGINGFACE_API_KEY")
 
 ABS_PATH: str = os.path.dirname(os.path.abspath(__file__))
 DB_DIR: str = os.path.join(ABS_PATH, "newEmb")
-
+huggingface_api_key = os.getenv("HUGGINGFACE_API_KEY")
 
 # Set up RetrievelQA model
 rag_prompt_mistral = hub.pull("rlm/rag-prompt-mistral")
@@ -144,21 +138,9 @@ def qa_bot():
     )
 
     # Using Bge Embeddings
-    # vectorstore = Chroma(
-    #     persist_directory=DB_PATH, embedding_function=hf_embeddings
-    # )
-    embed_dimension = 1024
-    try:
-        faiss_index = faiss.read_index(os.path.join(DB_PATH, "faiss_index"))
-    except:
-        faiss_index = faiss.IndexFlatL2(embed_dimension)  # L2 distance metric
-
-    # Create FAISS vector store
-    vectorstore = FAISS(embedding_function=hf_embeddings,
-                        index=faiss_index,
-                        docstore=InMemoryDocstore(),
-                        index_to_docstore_id={},
-                        )
+    vectorstore = Chroma(
+        persist_directory=DB_PATH, embedding_function=hf_embeddings
+    )
 
     # Using Ollama Embeddings
     # vectorstore = Chroma(
@@ -226,18 +208,9 @@ async def main(message):
     )
 
 
-    # vectorstore = Chroma(
-    #     persist_directory=DB_DIR, embedding_function=hf_embeddings
-    # )
-    embed_dimension = 1024
-    try:
-        faiss_index = faiss.read_index(os.path.join(DB_DIR, "faiss_index"))
-    except:
-        faiss_index = faiss.IndexFlatL2(embed_dimension)  # L2 distance metric
-    
-    vectorstore = FAISS(embedding_function=hf_embeddings, index=faiss_index,
-                        docstore=InMemoryDocstore(),
-                        index_to_docstore_id={},)
+    vectorstore = Chroma(
+        persist_directory=DB_DIR, embedding_function=hf_embeddings
+    )
 
 
     # Using Ollama Embeddings
