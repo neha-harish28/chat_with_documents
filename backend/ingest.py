@@ -3,7 +3,6 @@ import warnings
 import chainlit as cl
 from chainlit.input_widget import TextInput
 from dotenv import load_dotenv
-import numpy as np
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import (
@@ -12,14 +11,10 @@ from langchain_community.document_loaders import (
     YoutubeLoader
 )
 from langchain_community.embeddings import OllamaEmbeddings,HuggingFaceBgeEmbeddings
-#from langchain_community.vectorstores import Chroma
-from langchain_community.vectorstores import FAISS
-from langchain_community.docstore.in_memory import InMemoryDocstore
-from langchain_community.llms import HuggingFaceEndpoint
+from langchain_community.vectorstores import Chroma
 
 import pytube as pt
 import whisper
-import faiss
 
 warnings.simplefilter("ignore")
 
@@ -27,7 +22,7 @@ warnings.simplefilter("ignore")
 # data_directory = None
 # video_url = None
 
-ABS_PATH: str = os.path.dirname(os.path.abspath(__file__)) 
+ABS_PATH: str = os.path.dirname(os.path.abspath(__file__))  # Absolute path of directory where files will be accessed and stored
 FILE_PATH: str = os.path.join(ABS_PATH, "files")
 DB_DIR: str = os.path.join(ABS_PATH, "newEmb")
 # VD_DIR: str = os.path.join(ABS_PATH, "video")
@@ -135,36 +130,16 @@ def create_vector_database(uploaded_file):
     hf_embeddings = HuggingFaceBgeEmbeddings(
         model_name=model_name, model_kwargs=model_kwargs, encode_kwargs=encode_kwargs
     )
-    
-    document_embeddings = document_embeddings = hf_embeddings.embed_documents([doc.page_content for doc in chunked_documents])
 
-    document_embeddings_array = np.array(document_embeddings).astype('float32')
-
-    # Create a FAISS index
-    dimension = 1024  
-    index = faiss.IndexFlatL2(dimension)  # L2 distance for similarity search
-
-    # Add embeddings to the index
-    index.add(document_embeddings_array)
-    docstore = InMemoryDocstore({i: doc for i, doc in enumerate(chunked_documents)})
-
-    # Create a FAISS vector store
-    vector_database = FAISS(
-        index=index,
-        embedding_function=hf_embeddings,
-        docstore=docstore,
-        index_to_docstore_id={},# Store documents in memory
+    # Create and persist a Chroma vector database from the chunked documents
+    vector_database = Chroma.from_documents(
+        documents=chunked_documents,
+        embedding=hf_embeddings,
+        persist_directory=DB_DIR,
+        collection_metadata={"hnsw:space": "cosine"}
     )
 
-    # # Create and persist a Chroma vector database from the chunked documents
-    # vector_database = Chroma.from_documents(
-    #     documents=chunked_documents,
-    #     embedding=hf_embeddings,
-    #     persist_directory=DB_DIR,
-    #     collection_metadata={"hnsw:space": "cosine"}
-    # )
-
-    # vector_database.persist()
+    vector_database.persist()
 
 
     print("\nFile Embedded to Database!")
@@ -175,6 +150,9 @@ def create_vector_database(uploaded_file):
 
 # if __name__ == "__main__":
 #     create_vector_database()
+
+
+
 
 
 
