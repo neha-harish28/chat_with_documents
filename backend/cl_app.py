@@ -210,58 +210,41 @@ async def main(message):
 
     vectorstore = Chroma(
         persist_directory=DB_DIR, embedding_function=hf_embeddings
-    )
-
-
-    # Using Ollama Embeddings
-    # vectorstore = Chroma(
-    #     persist_directory=DB_DIR, embedding_function=OllamaEmbeddings(model="mistral")
-    # )
+    ) 
     
     metadocs = vectorstore.similarity_search_with_relevance_scores(message.content)
     
-
+    # Define a relevance score threshold
+    RELEVANCE_THRESHOLD = 0.2
+    relevant_docs_found = False
 
     if metadocs:
 
-        # print(metadocs, "metadocs")
-
-        source_names = []
-        for source_ind,[source_doc,score] in enumerate(metadocs):
+        for source_ind, [source_doc, score] in enumerate(metadocs):
             relevance_score = score
-            source = source_doc.metadata.get('source')
-            file_name = os.path.basename(source)
-            source_name = f"{source_ind+1}) {file_name}  [Relevance: {relevance_score}]"
+            if relevance_score >= RELEVANCE_THRESHOLD:
+                relevant_docs_found = True
+                source = source_doc.metadata.get('source')
+                file_name = os.path.basename(source)
+                source_name = f"{source_ind+1}) {file_name}  [Relevance: {relevance_score}]"
 
-            if ".pdf" in source:
-
-                answer += f"\nRelevant File: {file_name}"
-
-                text_elements.append(
-                cl.Pdf(path=source, name=file_name,display="side"),
-                )
+                if ".pdf" in source:
+                    answer += f"\nRelevant File: {file_name}"
+                    text_elements.append(
+                        cl.Pdf(path=source, name=file_name, display="side"),
+                    )
                 
-            if file_name.endswith(".mp4") or file_name.endswith(".mkv") or file_name.endswith(".avi"):
-                answer += f"\nRelevant Video: {file_name}"
+                if file_name.endswith(".mp4") or file_name.endswith(".mkv") or file_name.endswith(".avi"):
+                    answer += f"\nRelevant Video: {file_name}"
+                    text_elements.append(
+                        cl.Video(path=source, name=file_name, display="side"),
+                    )
                 
                 text_elements.append(
-                cl.Video(path=source, name=file_name, display="side"),
+                    cl.Text(content=source_doc.page_content, name=source_name),
                 )
-            # print(source)
-            # source_names.append(f"{source_name}  (Relevance: {relevance_score})")
-            # Create the text element referenced in the message
-            text_elements.append(
-                cl.Text(content=source_doc.page_content, name=source_name),
-            )          
-        
-        # source_names = [text_el.name for text_el in text_elements]
-            
 
-        # if source_names:
-        #     answer += f"\nSources: {', '.join(source_names)}"
-        # else:
-        #     answer += "\nNo sources found"
-
-    # print(text_elements)
+    if not relevant_docs_found:
+        answer += "\nNo highly relevant document found."
 
     await cl.Message(content=answer, elements=text_elements).send()
