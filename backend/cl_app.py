@@ -4,7 +4,7 @@ import os
 from langchain import hub
 from dotenv import load_dotenv
 from langchain_community.embeddings import OllamaEmbeddings
-#from langchain_community.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 from langchain_community.vectorstores import FAISS
 from langchain_community.docstore.in_memory import InMemoryDocstore
 from langchain_community.llms import Ollama
@@ -22,7 +22,7 @@ import faiss
 huggingface_api_key = os.getenv("HUGGINGFACE_API_KEY")
 
 ABS_PATH: str = os.path.dirname(os.path.abspath(__file__))
-DB_DIR: str = os.path.join(ABS_PATH, "newEmb")
+DB_DIR: str = os.path.join(ABS_PATH, "ChromaEmb")
 
 
 # Set up RetrievelQA model
@@ -45,6 +45,36 @@ from langchain.llms import HuggingFacePipeline
 #         doc.metadata["score"] = score
 
 #     return docs
+
+
+
+def remove_duplicate_documents(documents):
+    unique_documents = []
+    seen_content = set()
+
+    for doc,score in documents:
+        if doc.page_content not in seen_content:
+            unique_documents.append((doc,score))
+            seen_content.add(doc.page_content)
+
+    return unique_documents
+
+
+def remove_duplicate_elements(elements):
+    unique_elements = []
+    seen_content = set()
+
+    for element in elements:
+        if element.path is None:
+            unique_elements.append(element)
+        else:
+            if element.path not in seen_content:
+                unique_elements.append(element)
+                seen_content.add(element.path)
+
+    return unique_elements
+
+
 
 
 class MyVectorStoreRetriever(VectorStoreRetriever):
@@ -95,11 +125,20 @@ def load_model():
     #     repetition_penalty=1.1,
     # )
 
+    # if(f'{ENDPOINT_URL}' == model_id):
     llm = HuggingFaceEndpoint(
         repo_id = model_id,
         huggingfacehub_api_token=huggingface_api_key,
         temperature=0.5,
     )
+    # else:
+        # llm = HuggingFaceEndpoint(
+        #     endpoint_url = f'{ENDPOINT_URL}',
+        #     huggingfacehub_api_token=huggingface_api_key,
+        #     temperature=0.5,
+        # )
+
+
 
     # llm = HuggingFacePipeline(pipeline=pipe)
 
@@ -143,22 +182,22 @@ def qa_bot():
         model_name=model_name, model_kwargs=model_kwargs, encode_kwargs=encode_kwargs
     )
 
-    # Using Bge Embeddings
-    # vectorstore = Chroma(
-    #     persist_directory=DB_PATH, embedding_function=hf_embeddings
-    # )
-    embed_dimension = 1024
-    try:
-        faiss_index = faiss.read_index(os.path.join(DB_PATH, "faiss_index"))
-    except:
-        faiss_index = faiss.IndexFlatL2(embed_dimension)  # L2 distance metric
+    #Using Bge Embeddings
+    vectorstore = Chroma(
+        persist_directory=DB_PATH, embedding_function=hf_embeddings
+    )
+    # embed_dimension = 1024
+    # try:
+    #     faiss_index = faiss.read_index(os.path.join(DB_PATH, "faiss_index"))
+    # except:
+    #     faiss_index = faiss.IndexFlatL2(embed_dimension)  # L2 distance metric
 
-    # Create FAISS vector store
-    vectorstore = FAISS(embedding_function=hf_embeddings,
-                        index=faiss_index,
-                        docstore=InMemoryDocstore(),
-                        index_to_docstore_id={},
-                        )
+    # # Create FAISS vector store
+    # vectorstore = FAISS(embedding_function=hf_embeddings,
+    #                     index=faiss_index,
+    #                     docstore=InMemoryDocstore(),
+    #                     index_to_docstore_id={},
+    #                     )
 
     # Using Ollama Embeddings
     # vectorstore = Chroma(
@@ -180,9 +219,9 @@ async def start():
     print("hello")
 
     load_dotenv()
-
-    chain = qa_bot()
     welcome_message = cl.Message(content="Starting the bot...")
+    chain = qa_bot()
+    
     await welcome_message.send()
     welcome_message.content = (
         "Hi, Welcome to Chat With Documents using mistral-7b model and LangChain."
@@ -226,18 +265,18 @@ async def main(message):
     )
 
 
-    # vectorstore = Chroma(
-    #     persist_directory=DB_DIR, embedding_function=hf_embeddings
-    # )
-    embed_dimension = 1024
-    try:
-        faiss_index = faiss.read_index(os.path.join(DB_DIR, "faiss_index"))
-    except:
-        faiss_index = faiss.IndexFlatL2(embed_dimension)  # L2 distance metric
+    vectorstore = Chroma(
+        persist_directory=DB_DIR, embedding_function=hf_embeddings
+    )
+    # embed_dimension = 1024
+    # try:
+    #     faiss_index = faiss.read_index(os.path.join(DB_DIR, "faiss_index"))
+    # except:
+    #     faiss_index = faiss.IndexFlatL2(embed_dimension)  # L2 distance metric
     
-    vectorstore = FAISS(embedding_function=hf_embeddings, index=faiss_index,
-                        docstore=InMemoryDocstore(),
-                        index_to_docstore_id={},)
+    # vectorstore = FAISS(embedding_function=hf_embeddings, index=faiss_index,
+    #                     docstore=InMemoryDocstore(),
+    #                     index_to_docstore_id={},)
 
 
     # Using Ollama Embeddings
@@ -247,29 +286,29 @@ async def main(message):
     
     metadocs = vectorstore.similarity_search_with_relevance_scores(message.content)
     
-
+    metadocs = remove_duplicate_documents(metadocs)
 
     if metadocs:
 
         # print(metadocs, "metadocs")
 
-        source_names = []
+        # source_names = []
         for source_ind,[source_doc,score] in enumerate(metadocs):
             relevance_score = score
             source = source_doc.metadata.get('source')
             file_name = os.path.basename(source)
-            source_name = f"{source_ind+1}) {file_name}  [Relevance: {relevance_score}]"
+            source_name = f"{file_name} \n [Relevance: {relevance_score}]"
 
             if ".pdf" in source:
 
-                answer += f"\nRelevant File: {file_name}"
+                # answer += f"\nRelevant File: {file_name}"
 
                 text_elements.append(
                 cl.Pdf(path=source, name=file_name,display="side"),
                 )
                 
             if file_name.endswith(".mp4") or file_name.endswith(".mkv") or file_name.endswith(".avi"):
-                answer += f"\nRelevant Video: {file_name}"
+                # answer += f"\nRelevant Video: {file_name}"
                 
                 text_elements.append(
                 cl.Video(path=source, name=file_name, display="side"),
@@ -279,7 +318,9 @@ async def main(message):
             # Create the text element referenced in the message
             text_elements.append(
                 cl.Text(content=source_doc.page_content, name=source_name),
-            )          
+            )    
+            # print("------------------")
+            # print(source_doc.page_content)      
         
         # source_names = [text_el.name for text_el in text_elements]
             
@@ -288,6 +329,12 @@ async def main(message):
         #     answer += f"\nSources: {', '.join(source_names)}"
         # else:
         #     answer += "\nNo sources found"
+
+    # print(text_elements)
+
+    text_elements = remove_duplicate_elements(text_elements)
+
+    # print('---------------------------------')
 
     # print(text_elements)
 
