@@ -1,6 +1,7 @@
 How to run the application?
 ## Backend -
 i. Create a folder named 'files' in the backend section.
+
 ii. run the command 'uvicorn app:app --host 0.0.0.0 --port 80' in the terminal. 
 
 ## Frontend/chatbot folder - 
