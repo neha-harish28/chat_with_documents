@@ -50,7 +50,8 @@ function App() {
   const [inputValue, setInputValue] = useState("")
   const { sendMessage } = useChatInteract()
   const { messages } = useChatMessages()
- 
+  const [chatProcessing, setChatProcessing] = useState(false)
+
 
 
   useEffect(() => {
@@ -102,6 +103,14 @@ function App() {
   }, [update])
 
 
+  useEffect(() => {
+
+
+    setChatProcessing(false);
+
+  }, [elements])
+
+
   const handleInputFiles = async (files) => {
     let formData = new FormData()
     for (let i = 0; i < files.length; i++) {
@@ -123,11 +132,14 @@ function App() {
     if (content.length === 0) return;
     if (content) {
       const message = {
-        name: "user",
+        name: "User",
         type: "user_message",
         output: content,
       }
+
+
       sendMessage(message, [])
+
       setInputValue("")
     }
   }
@@ -137,46 +149,83 @@ function App() {
     const contexts = elements.filter(el => el.type === 'text')
     const nonContexts = elements.filter(el => el.type !== 'text')
 
+
+
     return (
       <>
-        {contexts.length > 0 && (
-          <div className="mx-auto max-w-xs">
-            <Carousel setApi={setApi} className="w-full max-w-xs">
-              <CarouselContent>
-                {contexts.map((context) => (
-                  <CarouselItem key={context.id}>
-                    <Card className="bg-[#171717] text-[#ececec]">
-                      <CardContent className="flex flex-col aspect-square justify-center p-6 space-y-2">
-                        <p>{context.name}</p>
-                        <iframe src={context.url} width="100%" height="100%" />
-                      </CardContent>
-                    </Card>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="bg-[#ececec] text-[#2f2f2f] hover:bg-[#c1c1c1]" />
-              <CarouselNext className="bg-[#ececec] text-[#2f2f2f] hover:bg-[#c1c1c1]" />
-            </Carousel>
-            <div className="py-2 text-center text-sm text-muted-foreground">
-              Context {current} 
-            </div>
-          </div>
+
+        { contexts.length > 0 && (
+        
+        <div className="flex items-center space-x-3">
+
+          <p className="font-bold"> Context : </p>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" className="bg-[#ececec] text-[#2f2f2f] hover:bg-[#c1c1c1]">
+              Show Context
+            </Button>
+          </SheetTrigger>
+          <SheetContent className="sm:max-w-[700px] bg-[#ececec] text-[#2f2f2f]">
+            <SheetHeader>
+              <SheetTitle>Related Contexts</SheetTitle>
+            </SheetHeader>
+
+            {contexts.length > 0 && (
+              <div className="mx-auto max-w-xs my-4">
+                <Carousel setApi={setApi} className="w-full max-w-xs">
+                  <CarouselContent>
+                    {contexts.map((context) => (
+                      <CarouselItem key={context.id}>
+                        <Card className="bg-[#171717] text-[#ececec]">
+                          <CardContent className="flex flex-col aspect-square justify-center p-6 space-y-2">
+                            <p>{context.name}</p>
+                            <iframe src={context.url} width="100%" height="100%" />
+                          </CardContent>
+                        </Card>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="bg-[#ececec] text-[#2f2f2f] hover:bg-[#c1c1c1]" />
+                  <CarouselNext className="bg-[#ececec] text-[#2f2f2f] hover:bg-[#c1c1c1]" />
+                </Carousel>
+                <div className="py-2 text-center text-sm text-muted-foreground">
+                  Context {current}
+                </div>
+              </div>
+            )}
+
+
+            <SheetFooter>
+              <SheetClose asChild />
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
+
+        </div>
+
         )}
+
+
+
+
+
         {nonContexts.length > 0 && (
-          <div className="flex justify-center space-x-2">
-            <div className="flex flex-col items-center justify-center border rounded-lg p-2">
-              <p className="text-[#ececec]">Related Files</p>
+          <div className="flex space-x-2">
+            <div className="flex flex-col my-4">
+              <p className="text-[#ececec] font-bold">Related Files</p>
               {nonContexts.map((element) => (
-                <div key={element.id} className="m-4">
+                <div key={element.id} className="my-4">
                   <Sheet>
                     <SheetTrigger asChild>
-                      <Button variant="outline" className="bg-[#ececec] text-[#2f2f2f] hover:bg-[#c1c1c1]">
+                      {/* <Button variant="outline" className="bg-[#ececec] text-[#2f2f2f] hover:bg-[#c1c1c1]">
                         {element.name}
-                      </Button>
+                      </Button> */}
+
+                      <a href="#" className="text-[pink] hover:text-[purple]" > {element.name} </a>
                     </SheetTrigger>
                     <SheetContent className="sm:max-w-[700px] bg-[#ececec] text-[#2f2f2f]">
                       <SheetHeader>
-                        <SheetTitle>Related File</SheetTitle>
+                        <SheetTitle className="my-4">Related File</SheetTitle>
                       </SheetHeader>
                       {element.type === 'pdf' ? (
                         <iframe src={element.url} width="100%" height="90%" />
@@ -199,7 +248,7 @@ function App() {
     )
   }
 
-  const renderMessage = (message,index,messages) => {
+  const renderMessage = (message, index, messages) => {
     if (!message.output || message.output.trim() === "") return null
     const date = new Date(message.createdAt).toLocaleTimeString(undefined, {
       hour: "2-digit",
@@ -214,12 +263,13 @@ function App() {
     return (
       <div key={message.id} className="flex items-start space-x-2">
         <div className="w-20 text-sm text-green-500">{message.name}</div>
-        <div className="flex-1 border rounded-lg p-2">
+        <div className="flex-1 flex flex-col rounded-lg p-2">
           <p className="text-[#ececec]">{message.output}</p>
-          <small className="text-xs text-gray-500">{date}</small>
+          <small className="text-xs text-gray-500 my-2 m">{date}</small>
 
 
           {specMessageEle && (renderElements(specMessageEle))}
+
         </div>
       </div>
     )
@@ -347,42 +397,53 @@ function App() {
 
 
 
-      
-      <div className="min-h-screen bg-[#212121] text-[#ececec] flex flex-col grow">
-        <div className="flex-1 overflow-auto p-6">
-          <div className="flex flex-col justify-center space-y-4">
-            {messages.map((message,index) => renderMessage(message,index,messages))}
+
+        <div className="min-h-screen bg-[#212121] text-[#ececec] flex flex-col grow">
+          <div className="flex-1 overflow-auto p-6">
+            <div className="flex flex-col justify-center space-y-4">
+              {messages.map((message, index) => renderMessage(message, index, messages))}
+            </div>
+          </div>
+          <div className="p-4 flex justify-center bg-[#212121] text-[#ececec]">
+            <div className="flex items-center space-x-2 rounded-lg">
+              <Input
+                autoFocus
+                className="bg-[#2f2f2f] w-[32rem] text-[#ececec] focus-visible:ring-offset-0 focus-visible:ring-transparent"
+                id="message-input"
+                placeholder="Type a message"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyUp={(e) => {
+                  if (e.key === "Enter") {
+                    handleSendMessage();
+                    setChatProcessing(true)
+                  }
+                }}
+              />
+
+              {
+                !chatProcessing ?
+                  <Button onClick={() => {handleSendMessage(); setChatProcessing(true) }} type="submit" className="bg-[#ececec] text-[#2f2f2f] rounded-full hover:bg-[#c1c1c1]">
+                    Send
+                  </Button>
+                  : <Button disabled className='bg-[#ececec] text-[#2f2f2f] hover:bg-[#c1c1c1] mt-4 w-34'>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </Button>
+
+
+              }
+            </div>
           </div>
         </div>
-        <div className="p-4 flex justify-center bg-[#212121] text-[#ececec]">
-          <div className="flex items-center space-x-2 rounded-lg">
-            <Input
-              autoFocus
-              className="bg-[#2f2f2f] w-[32rem] text-[#ececec] focus-visible:ring-offset-0 focus-visible:ring-transparent"
-              id="message-input"
-              placeholder="Type a message"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyUp={(e) => {
-                if (e.key === "Enter") {
-                  handleSendMessage()
-                }
-              }}
-            />
-            <Button onClick={handleSendMessage} type="submit" className="bg-[#ececec] text-[#2f2f2f] rounded-full hover:bg-[#c1c1c1]">
-              Send
-            </Button>
-          </div>
-        </div>
+
+
+
+
       </div>
 
 
-
-
-      </div>
-
-
-  </>
+    </>
   )
 }
 

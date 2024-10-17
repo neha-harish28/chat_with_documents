@@ -20,6 +20,7 @@ import huggingface_hub
 from langchain_community.llms import HuggingFaceEndpoint
 import faiss
 huggingface_api_key = os.getenv("HUGGINGFACE_API_KEY")
+endpoint_url = os.getenv("ENDPOINT_URL")
 
 ABS_PATH: str = os.path.dirname(os.path.abspath(__file__))
 DB_DIR: str = os.path.join(ABS_PATH, "ChromaEmb")
@@ -112,6 +113,8 @@ def load_model():
     model_id = "mistralai/Mistral-7B-Instruct-v0.3"  # Replace with the correct model ID
     
 
+    print('Reached Here')
+
 
 
     # pipe = pipeline(
@@ -125,18 +128,18 @@ def load_model():
     #     repetition_penalty=1.1,
     # )
 
-    # if(f'{ENDPOINT_URL}' == model_id):
+    # if(f'{endpoint_url}' == model_id):
     llm = HuggingFaceEndpoint(
-        repo_id = model_id,
+        endpoint_url = f'{endpoint_url}',
         huggingfacehub_api_token=huggingface_api_key,
         temperature=0.5,
     )
     # else:
-        # llm = HuggingFaceEndpoint(
-        #     endpoint_url = f'{ENDPOINT_URL}',
-        #     huggingfacehub_api_token=huggingface_api_key,
-        #     temperature=0.5,
-        # )
+    #     llm = HuggingFaceEndpoint(
+    #         endpoint_url = f'{endpoint_url}',
+    #         huggingfacehub_api_token=huggingface_api_key,
+    #         temperature=0.5,
+    #     )
 
 
 
@@ -287,6 +290,7 @@ async def main(message):
     metadocs = vectorstore.similarity_search_with_relevance_scores(message.content)
     
     metadocs = remove_duplicate_documents(metadocs)
+    
 
     if metadocs:
 
