@@ -13,11 +13,11 @@ This chat application is designed to provide accurate, contextually relevant ans
 
 ## How it Works?
 * A custom interface is used where the user can provide the documents which are used for the context of the conversation.
-* The provided documents are loaded using document loaders and broken into chunks. Document loaders available under Langchain were used.
+* The provided documents are loaded using document loaders and broken into chunks. Document loaders available under Langchain are used.
 * The chunks of text produced are sent to an embeddings generator model. It converts raw text data into a set of numerical values called embeddings. Embeddings are vectors of real numbers which capture the semantics, patterns and relationship in the data.
   - The embeddings model used :- bge-m3 model
 * The generated embeddings are stored in a vector store (database) which will be the knowledge base of the application.
-  - The vector store used :- ChromaDB/PineCone
+  - The vector store used :- ChromaDB
 * The user input is taken in the custom interface which is converted into embeddings and is used to search for similarities in the vector store.
   - Chainlit modules have been used to ease the interface between the custom frontend and the chat application backend.
 * The obtained results are then sent to an LLM model which is responsible for answering the user  specifically with the context provided(i.e the documents).
