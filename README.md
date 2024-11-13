@@ -55,7 +55,7 @@ Most of the requirements for the project should be satisfied by the provided req
 **For the working of llm model and Embedding Model (using huggingface)**
 
  *Mistral-7B is used using the huggingfaceendpoint and the access token is stored in a .env file.
- **Reference** - https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3*
+ **Reference** - https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2*
 
 **For the generation of transcript from an uploaded video file**
 
